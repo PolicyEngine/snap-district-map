@@ -1,0 +1,22 @@
+# Large output images
+*.png
+
+# Old geographic GeoJSON (4.4MB, not used - use hex version instead)
+congressional_districts.geojson
+congressional_districts_*.geojson
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment
+venv/
+env/
+.venv/
