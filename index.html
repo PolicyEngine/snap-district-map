@@ -653,7 +653,12 @@
                     locId = state + cd;
                     feature.id = locId;
 
-                    const geoidInt = parseInt(locId);
+                    // Convert at-large districts (00) to 01 for CSV lookup
+                    // e.g., Alaska "0200" -> 201, Wyoming "5600" -> 5601
+                    let geoidInt = parseInt(locId);
+                    if (cd === '00') {
+                        geoidInt = parseInt(state) * 100 + 1;
+                    }
                     const snapInfo = snapDataMap[geoidInt];
                     const benefits = snapInfo ? snapInfo.benefits : 0;
                     const population = snapInfo ? snapInfo.population : 0;
