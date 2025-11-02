@@ -6,16 +6,23 @@
     <title>SNAP Benefits by Congressional District | PolicyEngine</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <style>
-        /* PolicyEngine Colors */
+        /* PolicyEngine v2 Colors */
         :root {
-            --blue: #2C6496;
-            --blue-light: #D8E6F3;
-            --blue-98: #F7FAFD;
-            --teal: #39C6C0;
-            --darkest-blue: #0C1A27;
-            --dark-gray: #616161;
-            --light-gray: #F2F2F2;
+            --primary-teal: #319795;
+            --primary-teal-light: #E6FFFA;
+            --primary-teal-600: #2C7A7B;
+            --primary-teal-900: #1D4044;
+            --blue-50: #F0F9FF;
+            --blue-600: #0284C7;
+            --gray-50: #F9FAFB;
+            --gray-100: #F2F4F7;
+            --gray-700: #344054;
+            --gray-900: #101828;
+            --background-secondary: #F5F9FF;
+            --text-primary: #000000;
+            --text-secondary: #5A5A5A;
             --white: #FFFFFF;
+            --black: #000000;
         }
 
         * {
@@ -29,12 +36,12 @@
                 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
                 sans-serif;
             margin: 0;
-            background-color: var(--blue-98);
+            background-color: var(--background-secondary);
         }
 
         /* Header */
         .header {
-            background-color: var(--darkest-blue);
+            background-color: var(--primary-teal);
             color: var(--white);
             padding: 16px 32px;
             display: flex;
@@ -50,7 +57,7 @@
         }
 
         .header-logo span {
-            color: var(--teal);
+            color: var(--primary-teal-light);
         }
 
         /* Main Container */
@@ -70,14 +77,14 @@
         }
 
         h1 {
-            color: var(--darkest-blue);
+            color: var(--gray-900);
             font-size: 32px;
             margin-bottom: 8px;
             font-weight: 600;
         }
 
         .subtitle {
-            color: var(--dark-gray);
+            color: var(--text-secondary);
             font-size: 16px;
             line-height: 1.5;
         }
@@ -91,17 +98,18 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg, var(--blue) 0%, var(--darkest-blue) 100%);
+            background: var(--primary-teal);
             color: var(--white);
             padding: 24px;
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(44, 100, 150, 0.2);
+            box-shadow: 0 2px 8px rgba(49, 151, 149, 0.15);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(44, 100, 150, 0.3);
+            box-shadow: 0 4px 12px rgba(49, 151, 149, 0.25);
+            background: var(--primary-teal-600);
         }
 
         .stat-label {
@@ -128,7 +136,7 @@
         }
 
         .map-title {
-            color: var(--darkest-blue);
+            color: var(--gray-900);
             font-size: 20px;
             font-weight: 600;
             margin-bottom: 20px;
@@ -142,13 +150,13 @@
         .loading {
             text-align: center;
             padding: 80px 40px;
-            color: var(--dark-gray);
+            color: var(--text-secondary);
             font-size: 18px;
         }
 
         .loading-spinner {
-            border: 4px solid var(--light-gray);
-            border-top: 4px solid var(--blue);
+            border: 4px solid var(--gray-100);
+            border-top: 4px solid var(--primary-teal);
             border-radius: 50%;
             width: 48px;
             height: 48px;
@@ -165,12 +173,12 @@
         .footer {
             text-align: center;
             padding: 40px 20px;
-            color: var(--dark-gray);
+            color: var(--text-secondary);
             font-size: 14px;
         }
 
         .footer a {
-            color: var(--blue);
+            color: var(--primary-teal);
             text-decoration: none;
         }
 
@@ -183,7 +191,7 @@
     <!-- Header -->
     <div class="header">
         <a href="https://policyengine.org" class="header-logo">
-            Policy<span>Engine</span>
+            <img src="policyengine-logo.svg" alt="PolicyEngine" style="height: 40px; vertical-align: middle;" />
         </a>
     </div>
 
@@ -298,12 +306,12 @@
                     featureidkey: 'id',
                     locationmode: 'geojson-id',
                     colorscale: [
-                        [0, '#F7FDFC'],      // TEAL_LIGHT
-                        [0.2, '#D8E6F3'],    // BLUE_LIGHT
-                        [0.4, '#39C6C0'],    // TEAL_ACCENT
-                        [0.6, '#2C6496'],    // BLUE
-                        [0.8, '#17354F'],    // BLUE_PRESSED
-                        [1, '#0C1A27']       // DARKEST_BLUE
+                        [0, '#E6FFFA'],      // primary.50 (lightest teal)
+                        [0.2, '#B2F5EA'],    // primary.100
+                        [0.4, '#81E6D9'],    // primary.200
+                        [0.6, '#38B2AC'],    // primary.400
+                        [0.8, '#2C7A7B'],    // primary.600
+                        [1, '#1D4044']       // primary.900 (darkest teal)
                     ],
                     colorbar: {
                         title: {
