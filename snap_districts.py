@@ -16,11 +16,16 @@ for state in states:
     print(f"  Using main repository for {state}")
 
     # Get household-level data including income
-    household_df = sim.calculate_dataframe(["household_id", "household_weight", "congressional_district_geoid", "state_fips", "snap", "household_market_income"], map_to="household")
-    household_df['weighted_snap'] = household_df['household_weight'] * household_df['snap']
+    household_df = sim.calculate_dataframe(["household_id", "household_weight", "congressional_district_geoid", "state_fips", "household_market_income"], map_to="household")
 
     # Get person-level data for counting people receiving SNAP with age and employment
     person_df = sim.calculate_dataframe(["person_id", "person_household_id", "household_weight", "congressional_district_geoid", "state_fips", "snap", "age", "employment_income"], map_to="person")
+
+    snap_hh = person_df.groupby('person_household_id')['snap'].sum().reset_index()
+    snap_hh.columns = ['household_id', 'snap']
+
+    household_df = household_df.merge(snap_hh)
+    household_df['weighted_snap'] = household_df['household_weight'] * household_df['snap']
 
     # Count people receiving SNAP (snap > 0)
     person_df['receiving_snap'] = (person_df['snap'] > 0).astype(int)
@@ -78,6 +83,15 @@ combined_df = combined_df.groupby(['congressional_district_geoid', 'state_fips']
     'snap_employed': 'sum',
     'median_household_income': 'mean'
 }).reset_index()
+
+
+snap_estimate = np.sum(combined_df.total_weighted_snap)
+snap_target = 106744001279.0  # For a manual raking-style calibration
+
+adj_factor = snap_target / snap_estimate
+
+# Not idempoentent, so watch out!
+combined_df['total_weighted_snap'] = adj_factor * combined_df['total_weighted_snap']
 
 # Calculate percentages
 combined_df['pct_under_18'] = (combined_df['snap_under_18'] / combined_df['snap_population'] * 100).round(1)
