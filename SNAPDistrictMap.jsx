@@ -176,16 +176,10 @@ export default function SNAPDistrictMap(props) {
       lakecolor: 'rgb(255, 255, 255)',
       bgcolor: 'rgba(0,0,0,0)'
     },
-    title: {
-      text: 'SNAP Benefits by Congressional District',
-      font: {
-        size: 20
-      }
-    },
     height: mobile ? 500 : 700,
     margin: mobile
-      ? { t: 40, b: 0, l: 0, r: 0 }
-      : { t: 60, b: 0, l: 0, r: 0 },
+      ? { t: 0, b: 0, l: 0, r: 0 }
+      : { t: 0, b: 0, l: 0, r: 0 },
     paper_bgcolor: 'rgba(0,0,0,0)',
     plot_bgcolor: 'rgba(0,0,0,0)'
   };
