@@ -401,15 +401,15 @@
                     const values = line.split(',');
                     const geoid = parseInt(values[0]);
                     const stateFips = values[1].trim();
-                    const benefits = parseFloat(values[2]) / 1e6; // Convert to millions
-                    const population = parseFloat(values[3]); // SNAP recipients
-                    const snapUnder18 = parseFloat(values[4]);
-                    const snapOver65 = parseFloat(values[5]);
-                    const snapEmployed = parseFloat(values[6]);
+                    const benefits = parseFloat(values[8]) / 1e6; // Convert to millions
+                    const population = parseFloat(values[2]); // SNAP recipients
+                    const snapUnder18 = parseFloat(values[3]);
+                    const snapOver65 = parseFloat(values[4]);
+                    const snapEmployed = parseFloat(values[5]);
                     const medianIncome = parseFloat(values[7]);
-                    const pctUnder18 = parseFloat(values[8]);
-                    const pctOver65 = parseFloat(values[9]);
-                    const employmentRate = parseFloat(values[10]);
+                    const pctUnder18 = parseFloat(values[10]);
+                    const pctOver65 = parseFloat(values[11]);
+                    const employmentRate = parseFloat(values[12]);
 
                     snapDataMap[geoid] = {
                         geoid: geoid,

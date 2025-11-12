@@ -246,7 +246,7 @@
                     const values = lines[i].split(',');
                     const geoid = parseInt(values[0]);
                     const stateFips = values[1];
-                    const benefits = parseFloat(values[2]) / 1e6; // Convert to millions
+                    const benefits = parseFloat(values[8]) / 1e6; // Convert to millions
 
                     snapDataMap[geoid] = {
                         geoid: geoid,
