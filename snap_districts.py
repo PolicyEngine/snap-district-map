@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
+
 from policyengine_us import Microsimulation
+from microdf import MicroDataFrame
+
 
 states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL',
           'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME',
@@ -8,92 +11,138 @@ states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL',
           'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI',
           'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY']
 
+
+def subset_microdf(mdf, condition):
+    """Subset a MicroDataFrame while preserving weights.
+    
+    Args:
+        mdf: MicroDataFrame to subset
+        condition: Boolean array/Series for filtering
+    
+    Returns:
+        MicroDataFrame with filtered rows and corresponding weights
+    """
+    # Filter the data - .loc[] returns plain DataFrame
+    filtered_data = pd.DataFrame(mdf.loc[condition])
+
+    # Filter the weights using boolean values
+    filtered_weights = mdf.weights[condition.values]
+
+    # Create new MicroDataFrame
+    return mdf.__class__(filtered_data, weights=filtered_weights)
+
+
 all_results = []
 
 for state in states:
     print(f"Processing {state}...")
     sim = Microsimulation(dataset=f"hf://policyengine/policyengine-us-data/{state}.h5")
-    print(f"  Using main repository for {state}")
 
-    # Get household-level data including income
-    household_df = sim.calculate_dataframe(["household_id", "household_weight", "congressional_district_geoid", "state_fips", "household_market_income"], map_to="household")
+    household_df = sim.calculate_dataframe([
+        "household_id", "household_weight", "congressional_district_geoid",
+        "state_fips", "household_market_income", "snap"],
+        map_to="household")
 
-    # Get person-level data for counting people receiving SNAP with age and employment
-    person_df = sim.calculate_dataframe(["person_id", "person_household_id", "household_weight", "congressional_district_geoid", "state_fips", "snap", "age", "employment_income"], map_to="person")
+    person_df = sim.calculate_dataframe([
+        "person_id", "person_household_id", "age", "employment_income"],
+        map_to="person")
 
-    snap_hh = person_df.groupby('person_household_id')['snap'].sum().reset_index()
-    snap_hh.columns = ['household_id', 'snap']
+    hh_snap_data = household_df[['household_id', 'snap']].rename(
+        columns={'snap': 'hh_snap'}
+    )
 
-    household_df = household_df.merge(snap_hh)
-    household_df['weighted_snap'] = household_df['household_weight'] * household_df['snap']
+    person_df = person_df.merge(
+        hh_snap_data,
+        left_on='person_household_id',
+        right_on='household_id',
+        how='left'
+    )
 
-    # Count people receiving SNAP (snap > 0)
-    person_df['receiving_snap'] = (person_df['snap'] > 0).astype(int)
-    person_df['weighted_snap_recipients'] = person_df['household_weight'] * person_df['receiving_snap']
+    person_df = person_df.drop(columns=['household_id'])
 
-    # Count SNAP recipients by age groups
-    person_df['snap_under_18'] = ((person_df['snap'] > 0) & (person_df['age'] < 18)).astype(int)
-    person_df['snap_over_65'] = ((person_df['snap'] > 0) & (person_df['age'] >= 65)).astype(int)
-    person_df['weighted_snap_under_18'] = person_df['household_weight'] * person_df['snap_under_18']
-    person_df['weighted_snap_over_65'] = person_df['household_weight'] * person_df['snap_over_65']
+    person_df['receiving_snap'] = (person_df['hh_snap'] > 0).astype(int)
+    person_df['snap_under_18'] = ((person_df['hh_snap'] > 0) & (person_df['age'] < 18)).astype(int)
+    person_df['snap_over_65'] = ((person_df['hh_snap'] > 0) & (person_df['age'] >= 65)).astype(int)
+    person_df['snap_employed'] = ((person_df['hh_snap'] > 0) & (person_df['employment_income'] > 0)).astype(int)
+    person_df['one'] = 1.0
 
-    # Count employed SNAP recipients (employment_income > 0)
-    person_df['snap_employed'] = ((person_df['snap'] > 0) & (person_df['employment_income'] > 0)).astype(int)
-    person_df['weighted_snap_employed'] = person_df['household_weight'] * person_df['snap_employed']
+    cols_to_sum = [
+        'one',
+        'receiving_snap',
+        'snap_under_18',
+        'snap_over_65',
+        'snap_employed'
+    ]
+    
+    hh_counts_df = person_df.groupby('person_household_id')[cols_to_sum].sum().reset_index()
+    hh_counts_df = hh_counts_df.rename(columns={
+        'one': 'sum_of_one',
+        'receiving_snap': 'n_snap_recipients',
+        'snap_under_18': 'n_snap_under_18',
+        'snap_over_65': 'n_snap_over_65',
+        'snap_employed': 'n_snap_employed'
+    })
 
-    # Aggregate household SNAP benefits
-    weighted_totals = household_df.groupby(['congressional_district_geoid', 'state_fips'])['weighted_snap'].sum().reset_index()
-    weighted_totals.rename(columns={'weighted_snap': 'total_weighted_snap'}, inplace=True)
+    household_df = household_df.merge(
+        hh_counts_df,
+        left_on='household_id',
+        right_on='person_household_id',
+        how='left'
+    )
+    household_df = household_df.drop(columns=['person_household_id'])
 
-    # Aggregate person counts including age breakdowns and employment
-    person_totals = person_df.groupby(['congressional_district_geoid', 'state_fips']).agg({
-        'weighted_snap_recipients': 'sum',
-        'weighted_snap_under_18': 'sum',
-        'weighted_snap_over_65': 'sum',
-        'weighted_snap_employed': 'sum'
-    }).reset_index()
-    person_totals.rename(columns={
-        'weighted_snap_recipients': 'snap_population',
-        'weighted_snap_under_18': 'snap_under_18',
-        'weighted_snap_over_65': 'snap_over_65',
-        'weighted_snap_employed': 'snap_employed'
+    unweighted_counts = [
+        'n_snap_recipients',
+        'n_snap_under_18',
+        'n_snap_over_65',
+        'n_snap_employed'
+    ]
+
+    weighted_counts = [f'weighted_{col}' for col in unweighted_counts]
+    for i in range(len(unweighted_counts)):
+        unweighted_col = unweighted_counts[i]
+        weighted_col = weighted_counts[i]
+        household_df[weighted_col] = household_df[unweighted_col].values * household_df['household_weight'].values
+
+    grouping_cols = ['congressional_district_geoid', 'state_fips']
+    cols_to_sum = weighted_counts + ['household_weight']
+    district_totals = household_df.groupby(grouping_cols)[cols_to_sum].sum().reset_index()
+
+    district_totals.rename(columns={
+        'weighted_n_snap_recipients': 'snap_population',
+        'weighted_n_snap_under_18': 'snap_under_18',
+        'weighted_n_snap_over_65': 'snap_over_65',
+        'weighted_n_snap_employed': 'snap_employed'
     }, inplace=True)
 
-    # Calculate median household income by district for SNAP recipients only
-    # Filter to only households receiving SNAP
-    snap_households = household_df[household_df['snap'] > 0].copy()
+    snap_households = household_df[household_df['snap'] > 0]
+    snap_households['one'] = 1
 
-    # Calculate weighted average income for SNAP households
-    income_by_district = snap_households.groupby(['congressional_district_geoid', 'state_fips']).apply(
-        lambda x: np.average(x['household_market_income'], weights=x['household_weight']) if len(x) > 0 else 0
-    ).reset_index()
-    income_by_district.rename(columns={0: 'median_household_income'}, inplace=True)
+    by_district_dfs = []
+    for cd_id in set(snap_households.congressional_district_geoid):
+        by_district_dfs.append(
+            pd.DataFrame({
+                'congressional_district_geoid': cd_id,
+                'state_fips': cd_id // 100,
+                'median_household_income': subset_microdf(snap_households, snap_households.congressional_district_geoid == cd_id).household_market_income.median(),
+                'total_weighted_snap': subset_microdf(snap_households, snap_households.congressional_district_geoid == cd_id).snap.sum(),
+                'one_sum_test': subset_microdf(snap_households, snap_households.congressional_district_geoid == cd_id).one.sum(),
+            }, index=[cd_id])
+        )
+    by_district = pd.concat(by_district_dfs)
 
-    # Merge all together
-    combined = weighted_totals.merge(person_totals, on=['congressional_district_geoid', 'state_fips'], how='left')
-    combined = combined.merge(income_by_district, on=['congressional_district_geoid', 'state_fips'], how='left')
+    combined = district_totals.merge(by_district, on=['congressional_district_geoid', 'state_fips'], how='left')
     all_results.append(combined)
 
 combined_df = pd.concat(all_results, ignore_index=True)
-combined_df = combined_df.groupby(['congressional_district_geoid', 'state_fips']).agg({
-    'total_weighted_snap': 'sum',
-    'snap_population': 'sum',
-    'snap_under_18': 'sum',
-    'snap_over_65': 'sum',
-    'snap_employed': 'sum',
-    'median_household_income': 'mean'
-}).reset_index()
-
 
 snap_estimate = np.sum(combined_df.total_weighted_snap)
-snap_target = 106744001279.0  # For a manual raking-style calibration
+snap_target = 106744001279.0
 
 adj_factor = snap_target / snap_estimate
 
-# Not idempoentent, so watch out!
 combined_df['total_weighted_snap'] = adj_factor * combined_df['total_weighted_snap']
 
-# Calculate percentages
 combined_df['pct_under_18'] = (combined_df['snap_under_18'] / combined_df['snap_population'] * 100).round(1)
 combined_df['pct_over_65'] = (combined_df['snap_over_65'] / combined_df['snap_population'] * 100).round(1)
 combined_df['employment_rate'] = (combined_df['snap_employed'] / combined_df['snap_population'] * 100).round(1)
@@ -103,6 +152,8 @@ combined_df.to_csv('snap_by_congressional_district.csv', index=False)
 print("--- Weighted SNAP Totals by Congressional District (All States) ---")
 print(combined_df.head(10))
 print(f"\nTotal districts: {len(combined_df)}")
+if 'one_sum_test' in combined_df.columns:
+    print(f"Test: Total 'one' sum (should be millions if weighted): {combined_df['one_sum_test'].sum():,.0f}")
 print(f"Total SNAP benefits: ${combined_df['total_weighted_snap'].sum():,.0f}")
 print(f"Total SNAP recipients: {combined_df['snap_population'].sum():,.0f}")
 print(f"Avg % under 18: {combined_df['pct_under_18'].mean():.1f}%")
