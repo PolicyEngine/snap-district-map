@@ -1,0 +1,26 @@
+__pycache__/
+*.pyc
+.DS_Store
+.claude/
+
+# Large downloadable data files
+data/pp-*.csv
+data/NSPL*/
+data/NSPL_*.zip
+data/postcodes_with_con.csv
+
+# Large GeoJSON files (can be downloaded)
+uk_constituencies_2024*.geojson
+
+# Generated outputs (can be regenerated)
+mansion_tax_*.html
+mansion_tax_*.png
+mansion_tax_*.json
+uk_constituencies_simple*.geojson
+uk_constituencies_simplified*.geojson
+uk_constituencies_minimal*.geojson
+uk_constituencies_web*.geojson
+household_impact_*.csv
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
