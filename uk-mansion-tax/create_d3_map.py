@@ -98,15 +98,18 @@ def create_d3_html(geojson, hex_data, impact_data, threshold='1m'):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mansion Tax Impact by Constituency ({threshold_label} threshold)</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {{
+            --pe-font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }}
         * {{
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }}
         body {{
-            font-family: 'Roboto', sans-serif;
+            font-family: var(--pe-font-family-primary);
             background: white;
         }}
         .map-wrapper {{
@@ -158,7 +161,7 @@ def create_d3_html(geojson, hex_data, impact_data, threshold='1m'):
             border: 1px solid #d1d5db;
             border-radius: 6px;
             font-size: 0.875rem;
-            font-family: 'Roboto', sans-serif;
+            font-family: var(--pe-font-family-primary);
         }}
         .constituency-search:focus {{
             outline: none;
@@ -186,7 +189,7 @@ def create_d3_html(geojson, hex_data, impact_data, threshold='1m'):
             border: none;
             border-bottom: 1px solid #f3f4f6;
             cursor: pointer;
-            font-family: 'Roboto', sans-serif;
+            font-family: var(--pe-font-family-primary);
         }}
         .search-result-item:last-child {{
             border-bottom: none;
@@ -219,7 +222,7 @@ def create_d3_html(geojson, hex_data, impact_data, threshold='1m'):
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-family: 'Roboto', sans-serif;
+            font-family: var(--pe-font-family-primary);
             background: transparent;
             color: #6b7280;
         }}
