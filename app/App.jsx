@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { parseCSV, computeStats } from "./dataUtils";
 import MapToggle from "./components/MapToggle";
@@ -22,9 +24,9 @@ export default function App() {
     async function loadData() {
       try {
         const [hexRes, realRes, csvRes] = await Promise.all([
-          fetch(`${import.meta.env.BASE_URL}data/hex_congressional_districts.geojson`),
-          fetch(`${import.meta.env.BASE_URL}data/real_congressional_districts.geojson`),
-          fetch(`${import.meta.env.BASE_URL}data/snap_by_congressional_district.csv`),
+          fetch(`/data/hex_congressional_districts.geojson`),
+          fetch(`/data/real_congressional_districts.geojson`),
+          fetch(`/data/snap_by_congressional_district.csv`),
         ]);
 
         const hexData = await hexRes.json();
