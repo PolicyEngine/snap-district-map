@@ -21,14 +21,14 @@ export default function SNAPDistrictMap(props) {
     async function loadData() {
       try {
         // Load both GeoJSON files
-        const hexResponse = await fetch('/data/hex_congressional_districts.geojson');
+        const hexResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/data/hex_congressional_districts.geojson`);
         const hexData = await hexResponse.json();
 
-        const realResponse = await fetch('/data/real_congressional_districts.geojson');
+        const realResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/data/real_congressional_districts.geojson`);
         const realData = await realResponse.json();
 
         // Load SNAP data
-        const snapResponse = await fetch('/data/snap_by_congressional_district.csv');
+        const snapResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/data/snap_by_congressional_district.csv`);
         const snapText = await snapResponse.text();
 
         // Parse CSV
