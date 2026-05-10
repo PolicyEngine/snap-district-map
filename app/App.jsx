@@ -8,6 +8,7 @@ import DistrictMap from "./components/DistrictMap";
 import DistrictModal from "./components/DistrictModal";
 
 const TEAL = "#319795";
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 export default function App() {
   const [hexGeoJSON, setHexGeoJSON] = useState(null);
@@ -24,9 +25,9 @@ export default function App() {
     async function loadData() {
       try {
         const [hexRes, realRes, csvRes] = await Promise.all([
-          fetch(`/data/hex_congressional_districts.geojson`),
-          fetch(`/data/real_congressional_districts.geojson`),
-          fetch(`/data/snap_by_congressional_district.csv`),
+          fetch(`${BASE_PATH}/data/hex_congressional_districts.geojson`),
+          fetch(`${BASE_PATH}/data/real_congressional_districts.geojson`),
+          fetch(`${BASE_PATH}/data/snap_by_congressional_district.csv`),
         ]);
 
         const hexData = await hexRes.json();
