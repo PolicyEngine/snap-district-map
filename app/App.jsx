@@ -8,7 +8,8 @@ import DistrictMap from "./components/DistrictMap";
 import DistrictModal from "./components/DistrictModal";
 
 const TEAL = "#319795";
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+const BASE_PATH =
+  process.env.NEXT_PUBLIC_BASE_PATH || "/us/snap-district-map";
 
 export default function App() {
   const [hexGeoJSON, setHexGeoJSON] = useState(null);

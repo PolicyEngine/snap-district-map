@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import PolicyEngineHeader from './components/PolicyEngineHeader';
 import './globals.css';
 
 const TITLE = 'SNAP Benefits by Congressional District | PolicyEngine';
@@ -35,7 +36,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <PolicyEngineHeader />
+        {children}
+      </body>
     </html>
   );
 }
