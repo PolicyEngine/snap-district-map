@@ -97,30 +97,43 @@ export function computeStats(dataMap) {
 }
 
 export function getDistrictId(feature, mapType) {
-  if (mapType === "hex") {
-    return feature.properties.cd_id;
+  const props = feature?.properties || {};
+  // Detect by available properties, not mapType: react-simple-maps can briefly
+  // render with the previous geographies array while mapType has already flipped
+  // (state-update race when toggling hex <-> real). Branching on mapType then
+  // crashes because the wrong key set is present.
+  if (props.cd_id !== undefined && props.cd_id !== null) {
+    return props.cd_id;
   }
-  const state = feature.properties.STATEFP.padStart(2, "0");
-  const cd = feature.properties.CD118FP.padStart(2, "0");
-  const locId = state + cd;
-  let geoidInt = parseInt(locId);
-  if (cd === "00") {
-    geoidInt = parseInt(state) * 100 + 1;
+  if (props.STATEFP && props.CD118FP) {
+    const state = String(props.STATEFP).padStart(2, "0");
+    const cd = String(props.CD118FP).padStart(2, "0");
+    const locId = state + cd;
+    let geoidInt = parseInt(locId);
+    if (cd === "00") {
+      geoidInt = parseInt(state) * 100 + 1;
+    }
+    return geoidInt;
   }
-  return geoidInt;
+  return null;
 }
 
 export function getDistrictLabel(feature, mapType, snapInfo) {
-  if (mapType === "hex") {
-    const stateName = snapInfo?.stateName || feature.properties.STATENAME || "Unknown";
-    const districtLabel = feature.properties.CDLABEL || feature.properties.cd_id;
+  const props = feature?.properties || {};
+  // Detect by properties (see getDistrictId rationale).
+  if (props.cd_id !== undefined && props.cd_id !== null) {
+    const stateName = snapInfo?.stateName || props.STATENAME || "Unknown";
+    const districtLabel = props.CDLABEL || props.cd_id;
     return `${stateName} District ${districtLabel}`;
   }
-  const districtName =
-    feature.properties.NAMELSAD || `District ${feature.properties.CD118FP}`;
-  const stateFips = parseInt(feature.properties.STATEFP);
-  const stateName = snapInfo?.stateName || STATE_NAMES[stateFips] || "Unknown";
-  return `${stateName} - ${districtName}`;
+  if (props.STATEFP) {
+    const districtName =
+      props.NAMELSAD || `District ${props.CD118FP || ""}`.trim();
+    const stateFips = parseInt(props.STATEFP);
+    const stateName = snapInfo?.stateName || STATE_NAMES[stateFips] || "Unknown";
+    return `${stateName} - ${districtName}`;
+  }
+  return "Unknown";
 }
 
 export { STATE_NAMES };
